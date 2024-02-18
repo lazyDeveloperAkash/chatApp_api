@@ -1,6 +1,7 @@
 const { catchAsyncErrors } = require("../middlewares/catchAsyncErrors");
 const User = require("../models/userModel");
-const Message = require("../models/message")
+const Message = require("../models/message");
+const Group = require("../models/groupModel");
 const ErrorHandler = require("../utils/errorHandler");
 const { sendToken } = require("../utils/sendToken");
 const { sendmail } = require("../utils/nodemailer")
@@ -18,9 +19,59 @@ exports.homePage = (req, res, next) => {
 }
 
 exports.currentUser = catchAsyncErrors(async (req, res, next) => {
-    const user = await User.findById(req.id).populate('friend').exec();
+    const user = await User.findById(req.id).populate("friend").populate("groups").exec();
     res.json(user);
 })
+
+exports.createGroup = catchAsyncErrors(async (req, res, next) => {
+    const group = await new Group({ name: req.body?.name, creator: req.id, members: req.body?.userArr }).save();
+    group.members.map(async (e) => {
+        const user = await User.findById(e).exec();
+        user.groups.push(group._id);
+        user.save();
+    })
+    res.json(group);
+})
+
+exports.groupInfo = catchAsyncErrors(async (req, res, next) => {
+    let group = await Group.findById(req.body.id).populate("chats").exec();
+    let newArr = [];
+    await Promise.all(group.chats.map(async (e) => {
+        const { sender } = await Message.findById(e._id).populate('sender').exec();
+        const newObj = {
+            name: sender.name,
+            id: sender._id,
+            msg: decryption(e)
+        }
+        newArr.push(newObj);
+    }))
+    const newGroup = {
+        _id: group.id,
+        name: group.name,
+        avatar: group.avatar,
+        chats: newArr
+    }
+    res.json(newGroup);
+})
+
+exports.groupAvatar = catchAsyncErrors(async (req, res, next) => {
+    const group = await Group.findById(req.body.id).exec();
+    const file = req.files.avatar;
+    const modifiedFielName = `chatApp-groupPicture${Date.now()}${path.extname(file.name)}`;
+    if (group.avatar.fileId !== "") {
+        await imagekit.deleteFile(group.avatar.fileId);
+    }
+    const { fileId, url } = await imagekit.upload({
+        file: file.data,
+        fileName: modifiedFielName
+    })
+    group.avatar = { fileId, url };
+    await group.save();
+    res.status(200).json({
+        success: true,
+        message: "Profile Image Updated !"
+    })
+});
 
 exports.userSingup = catchAsyncErrors(async (req, res, next) => {
     const user = await new User(req.body).save();
@@ -130,20 +181,6 @@ exports.userUpdate = catchAsyncErrors(async (req, res, next) => {
     })
 });
 
-exports.chat = catchAsyncErrors(async (req, res, next) => {
-    const user = await User.findById(req.id).exec();
-    const allUser = await User.find().exec();
-    res.json({ user, allUser });
-});
-
-exports.chatwithUser = catchAsyncErrors(async (req, res, next) => {
-    let receaver = await User.findById(req.body.id).populate('chats').exec();
-    receaver.chats.forEach((e)=> {
-        if(e.receaver == req.id || e.sender == req.id) e.msg = decryption(e);
-    })
-    res.json(receaver);
-});
-
 exports.invite = catchAsyncErrors(async (req, res, next) => {
     console.log(req.body.contact)
     const user = await User.find({ contact: { $regex: req.body.contact } }).exec();
@@ -151,7 +188,6 @@ exports.invite = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.newChat = catchAsyncErrors(async (req, res, next) => {
-    console.log(req.body.id)
     const user = await User.findById(req.body.id).exec();
     const loggedinUser = await User.findById(req.id).exec();
     loggedinUser.friend.push(req.body.id);
@@ -161,10 +197,22 @@ exports.newChat = catchAsyncErrors(async (req, res, next) => {
     res.json({ user });
 });
 
+exports.chatwithUser = catchAsyncErrors(async (req, res, next) => {
+    let receaver = await User.findById(req.body.id).populate('chats').exec();
+    receaver.chats.forEach((e) => {
+        if (e.receaver == req.id || e.sender == req.id) e.msg = decryption(e);
+    })
+    res.json(receaver);
+});
+
+
 exports.msgUpload = catchAsyncErrors(async (req, res, next) => {
-    const user = await User.findOne({ contact: req.body.receaver }).exec();
+    var user;
+    if (req.body.isGroup) user = await Group.findById(req.body.receaver).exec();
+    else user = await User.findById(req.body.receaver).exec();
     const loggedinUser = await User.findById(req.id).exec();
     const data = encryption(req.body.msg);
+    console.log(user);
     const message = await new Message({ sender: req.id, receaver: user._id, msg: data.msg, iv: data.iv }).save();
     loggedinUser.chats.push(message._id);
     user.chats.push(message._id);

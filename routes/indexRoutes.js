@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { isAuthenticate } = require("../middlewares/auth")
-const { homePage, currentUser, userSingup, userSinginEmail, userSinginContact, userSingout, chatwithUser, userAvatar, sendMail, otpVarification, forgotPasswordToChange, userUpdate, userResetPassword, invite, newChat, msgUpload } = require("../controllers/indexController");
+const { homePage, currentUser, userSingup, userSinginEmail, userSinginContact, userSingout, chatwithUser, userAvatar, sendMail, otpVarification, forgotPasswordToChange, userUpdate, userResetPassword, invite, newChat, msgUpload, groupInfo,createGroup, groupAvatar } = require("../controllers/indexController");
 
 router.get("/", homePage);
 router.get("/user", isAuthenticate, currentUser);
@@ -10,6 +10,15 @@ router.post("/singup", userSingup);
 router.post("/singin/email", userSinginEmail);
 router.post("/singin/contact", userSinginContact);
 router.get("/singout", isAuthenticate, userSingout);
+
+//group create
+router.post("/createGroup", isAuthenticate, createGroup);
+
+//profile picture of group
+router.post("/groupAvatar", isAuthenticate, groupAvatar);
+
+//get group info
+router.post("/group-info", isAuthenticate, groupInfo);
 
 // update profile
 router.post("/update-profile", isAuthenticate, userUpdate);

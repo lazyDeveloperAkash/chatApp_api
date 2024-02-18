@@ -4,10 +4,11 @@ function initializeSocketIo(server, options) {
     const io = socketIo(server, options);
 
     let clients = [];
+    let groups = [];
 
-    function uniqueObj(newObj){
+    function uniqueObj(newObj) {
         const isDuplicate = clients.some(obj => obj.contact === newObj.contact);
-        if(!isDuplicate) clients.push(newObj);
+        if (!isDuplicate) clients.push(newObj);
     }
 
     io.on("connection", (socket) => {
@@ -22,7 +23,17 @@ function initializeSocketIo(server, options) {
 
         socket.on('join', (data) => {
             const receaver = clients.find(obj => obj['contact'] === data.receaver);
-            if(receaver) io.to(receaver.socketId).emit('new-message', { msg: data.msg });
+            receaver && io.to(receaver.socketId).emit('new-message', { msg: data.msg });
+        })
+
+        socket.on('join-to-room', ({ rooms }) => {
+            rooms.map((e) => {
+                socket.join(e);
+            })
+        })
+
+        socket.on('group-msg', ({ groupId, msg, name, id }) => {
+            io.to(groupId).emit('group-message', { msg, name, id: id });
         })
 
         socket.on('disconnect', function (data) {
@@ -31,18 +42,18 @@ function initializeSocketIo(server, options) {
             console.log("user disconected !");
         });
 
-        socket.on('call-init', (data)=>{
+        socket.on('call-init', (data) => {
             const receaver = clients.find(obj => obj['contact'] === data.receaver);
-            if(receaver) io.to(receaver.socketId).emit('incoming-call',{ name: data.name, callType: data.callType, contact: data.user })
+            receaver && io.to(receaver.socketId).emit('incoming-call', { name: data.name, callType: data.callType, contact: data.user })
         })
         socket.on("call-status", (data) => {
             const receaver = clients.find(obj => obj['contact'] === data.contact);
-            if(receaver) io.to(receaver.socketId).emit('call-status', { peerId: data.peerId, name: data.name });
+            receaver && io.to(receaver.socketId).emit('call-status', { peerId: data.peerId, name: data.name, contact: data.contact });
         })
-        // socket.on('call-disconnected', (data)=>{
-        //     console.log(data)
-        //     io.to(data.callerSocketId).emit('call-disconected', data.calltype)
-        // })
+        socket.on('call-disconect', (data)=>{
+            const receaver = clients.find(obj => obj['contact'] === data.contact);
+            receaver && io.to(receaver.socketId).emit('call-disconect', true);
+        })
     })
     return io;
 }

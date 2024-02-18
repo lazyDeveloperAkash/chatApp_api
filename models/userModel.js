@@ -39,9 +39,12 @@ const userModel = new mongoose.Schema({
     friend: [
         { type: mongoose.Schema.Types.ObjectId, ref: "user" }
     ],
+    groups: [
+        { type: mongoose.Schema.Types.ObjectId, ref: "group" }
+    ],
     chats: [
         { type: mongoose.Schema.Types.ObjectId, ref: "message" }
-    ]
+    ],
 
 });
 
