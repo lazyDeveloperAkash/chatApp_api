@@ -1,21 +1,22 @@
 require("dotenv").config({ path: "./.env" });
-const express = require("express");
+const express = require('express');
 const app = express();
 
 //db connection
 require("./models/database").connectDatabase();
 
-// cors
-const cors = require("cors");
-app.use(cors({ credentials: true, origin: true }));
-
 //initialize logger)
 const logger = require("morgan");
 app.use(logger("tiny"));
 
+
 //body-perser (to active req.body)
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// cors
+const cors = require("cors");
+app.use(cors({ credentials: true, origin: true }));
 
 //session & paeser
 const session = require("express-session");
@@ -37,6 +38,7 @@ app.use("/", require("./routes/indexRoutes"));
 //for socket io 
 const server = require('http').Server(app);
 const io = require("./socketapi")(server, { path: "/socket", serveClient: false });
+
 
 //error Handler
 const ErrorHandler = require("./utils/errorHandler");

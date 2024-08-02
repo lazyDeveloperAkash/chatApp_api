@@ -1,15 +1,17 @@
 const express = require("express");
 const router = express.Router();
 const { isAuthenticate } = require("../middlewares/auth")
-const { homePage, currentUser, userSingup, userSinginEmail, userSinginContact, userSingout, chatwithUser, userAvatar, sendMail, otpVarification, forgotPasswordToChange, userUpdate, userResetPassword, invite, newChat, msgUpload, groupInfo,createGroup, groupAvatar } = require("../controllers/indexController");
+const { homePage, currentUser, userSingup, userSinginEmail, userSinginContact, userSingout, chatwithUser, userAvatar, sendMail, otpVarification, forgotPasswordToChange, userUpdate, userResetPassword, invite, newChat, msgUpload, groupInfo,createGroup, groupAvatar, deleteAccount } = require("../controllers/indexController");
 
 router.get("/", homePage);
 router.get("/user", isAuthenticate, currentUser);
-
+router.get("/singout",userSingout)
 router.post("/singup", userSingup);
 router.post("/singin/email", userSinginEmail);
 router.post("/singin/contact", userSinginContact);
-router.get("/singout", isAuthenticate, userSingout);
+
+//delete account
+router.get("/delete", isAuthenticate, deleteAccount);
 
 //group create
 router.post("/createGroup", isAuthenticate, createGroup);

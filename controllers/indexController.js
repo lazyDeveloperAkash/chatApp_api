@@ -40,6 +40,7 @@ exports.groupInfo = catchAsyncErrors(async (req, res, next) => {
         const { sender } = await Message.findById(e._id).populate('sender').exec();
         const newObj = {
             name: sender.name,
+            senderImage: sender.avatar.url,
             id: sender._id,
             msg: decryption(e)
         }
@@ -79,7 +80,7 @@ exports.userSingup = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.userSinginEmail = catchAsyncErrors(async (req, res, next) => {
-    const user = await User.findOne({ email: req.body.email }).select("+password").exec();
+    const user = await User.findOne({ email: req.body.email }).select("+password").populate("friend").populate("groups").exec();
     if (!user) { return next(new ErrorHandler("User not Found with This Email Address", 404)) };
     const isMatch = user.comparePassword(req.body.password);
     if (!isMatch) return next(new ErrorHandler("Wrong password", 500));
@@ -87,7 +88,7 @@ exports.userSinginEmail = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.userSinginContact = catchAsyncErrors(async (req, res, next) => {
-    const user = await User.findOne({ contact: req.body.contact }).select("+password").exec();
+    const user = await User.findOne({ contact: req.body.contact }).select("+password").populate("friend").populate("groups").exec();
     if (!user) { return next(new ErrorHandler("User not Found with This Number", 404)) };
     const isMatch = user.comparePassword(req.body.password);
     if (!isMatch) return next(new ErrorHandler("Wrong password", 500));
@@ -181,8 +182,15 @@ exports.userUpdate = catchAsyncErrors(async (req, res, next) => {
     })
 });
 
+exports.deleteAccount = catchAsyncErrors(async (req, res, next) => {
+    await User.findByIdAndDelete(req.id).exec();
+    res.status(200).json({
+        success: true,
+        message: "User Deleted Successfully !"
+    })
+});
+
 exports.invite = catchAsyncErrors(async (req, res, next) => {
-    console.log(req.body.contact)
     const user = await User.find({ contact: { $regex: req.body.contact } }).exec();
     res.json({ user });
 });
@@ -190,9 +198,9 @@ exports.invite = catchAsyncErrors(async (req, res, next) => {
 exports.newChat = catchAsyncErrors(async (req, res, next) => {
     const user = await User.findById(req.body.id).exec();
     const loggedinUser = await User.findById(req.id).exec();
-    loggedinUser.friend.push(req.body.id);
-    user.friend.push(req.id);
+    loggedinUser.friend.push(user._id);
     loggedinUser.save();
+    user.friend.push(loggedinUser._id);
     user.save();
     res.json({ user });
 });
@@ -212,7 +220,6 @@ exports.msgUpload = catchAsyncErrors(async (req, res, next) => {
     else user = await User.findById(req.body.receaver).exec();
     const loggedinUser = await User.findById(req.id).exec();
     const data = encryption(req.body.msg);
-    console.log(user);
     const message = await new Message({ sender: req.id, receaver: user._id, msg: data.msg, iv: data.iv }).save();
     loggedinUser.chats.push(message._id);
     user.chats.push(message._id);

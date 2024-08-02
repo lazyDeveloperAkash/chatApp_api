@@ -8,5 +8,5 @@ exports.sendToken = (user, statusCode, res) => {
         httpOnly: true,
         // secure: true
     }
-    res.status(statusCode).cookie("token", token, options).json({success: true, id: user._id, token });
+    res.status(statusCode).cookie("token", token, options).json({user: user, success: true, id: user._id, token });
 }
