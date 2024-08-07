@@ -75,6 +75,7 @@ exports.groupAvatar = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.userSingup = catchAsyncErrors(async (req, res, next) => {
+    console.log(req.body)
     const user = await new User(req.body).save();
     sendToken(user, 201, res);
 });
