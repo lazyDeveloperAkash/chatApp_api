@@ -16,7 +16,13 @@ app.use(express.urlencoded({ extended: false }));
 
 // cors
 const cors = require("cors");
-app.use(cors({ credentials: true, origin: "https://chat-app-green-seven.vercel.app/" }));
+app.use(cors({ credentials: true, 
+    origin: [
+        "https://chat-app-green-seven.vercel.app",
+        "http://12.0.0.1:3000",
+        "http://localhost:3000"
+    ]
+}));
 
 //session & paeser
 const session = require("express-session");
