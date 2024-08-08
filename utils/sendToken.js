@@ -7,7 +7,7 @@ exports.sendToken = (user, statusCode, res) => {
         ),
         httpOnly: true,
         secure: true,
-        sameSite: 'strict'
+        sameSite: 'none'
     }
     res.status(statusCode).cookie("token", token, options).json({user: user, success: true, id: user._id, token });
 }

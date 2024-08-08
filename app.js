@@ -19,7 +19,7 @@ const cors = require("cors");
 app.use(cors({ credentials: true, 
     origin: [
         "https://chat-app-green-seven.vercel.app",
-        "http://12.0.0.1:3000",
+        "http://127.0.0.1:3000",
         "http://localhost:3000"
     ]
 }));
