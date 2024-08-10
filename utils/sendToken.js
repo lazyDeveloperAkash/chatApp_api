@@ -7,8 +7,8 @@ exports.sendToken = (user, statusCode, res) => {
         ),
         httpOnly: true,
         secure: true,
-        sameSite: 'None',
-        domain: "chat-app-green-seven.vercel.app"
+        sameSite: 'none',
+        domain: "https://chat-app-green-seven.vercel.app"
     }
     res.status(statusCode).cookie("token", token, options).json({user: user, success: true, id: user._id, token });
 }
