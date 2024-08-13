@@ -77,7 +77,7 @@ exports.groupAvatar = catchAsyncErrors(async (req, res, next) => {
 exports.userSingup = catchAsyncErrors(async (req, res, next) => {
     console.log(req.body)
     const user = await new User(req.body).save();
-    sendToken(user, 201, res);
+    sendToken(user, 201, req, res);
 });
 
 exports.userSinginEmail = catchAsyncErrors(async (req, res, next) => {
@@ -85,7 +85,7 @@ exports.userSinginEmail = catchAsyncErrors(async (req, res, next) => {
     if (!user) { return next(new ErrorHandler("User not Found with This Email Address", 404)) };
     const isMatch = user.comparePassword(req.body.password);
     if (!isMatch) return next(new ErrorHandler("Wrong password", 500));
-    sendToken(user, 200, res);
+    sendToken(user, 200, req, res);
 });
 
 exports.userSinginContact = catchAsyncErrors(async (req, res, next) => {
@@ -93,7 +93,7 @@ exports.userSinginContact = catchAsyncErrors(async (req, res, next) => {
     if (!user) { return next(new ErrorHandler("User not Found with This Number", 404)) };
     const isMatch = user.comparePassword(req.body.password);
     if (!isMatch) return next(new ErrorHandler("Wrong password", 500));
-    sendToken(user, 200, res);
+    sendToken(user, 200, req, res);
 });
 
 exports.userSingout = catchAsyncErrors(async (req, res, next) => {
@@ -172,7 +172,7 @@ exports.userResetPassword = catchAsyncErrors(async (req, res, next) => {
     res.status(200).json({
         message: "Password successfuly reset"
     })
-    sendToken(user, 201, res);
+    sendToken(user, 201, req, res);
 });
 
 exports.userUpdate = catchAsyncErrors(async (req, res, next) => {
